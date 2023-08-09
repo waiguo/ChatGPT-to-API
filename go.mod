@@ -3,13 +3,15 @@ module freechatgpt
 go 1.20
 
 require (
-	github.com/acheong08/OpenAIAuth v0.0.0-20230609193408-55a0f33f1057
+	github.com/acheong08/OpenAIAuth v0.0.0-20230719092354-c8cd4e19491b
 	github.com/acheong08/endless v0.0.0-20230615162514-90545c7793fd
+	github.com/acheong08/funcaptcha v1.9.3-0.20230803133445-f4d081d60ac7
 	github.com/bogdanfinn/fhttp v0.5.23
 	github.com/bogdanfinn/tls-client v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.3.0
+	github.com/joho/godotenv v1.5.1
 	github.com/tidwall/gjson v1.14.4
 	k8s.io/apimachinery v0.27.2
 )

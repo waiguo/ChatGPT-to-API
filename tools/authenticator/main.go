@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"authenticator/auth"
+	auth "authenticator/auth"
 )
 
 type Account struct {
@@ -126,7 +126,8 @@ func main() {
 			println("Status code: " + fmt.Sprint(err.StatusCode))
 			println("Details: " + err.Details)
 			println("Embedded error: " + err.Error.Error())
-			return
+			// Sleep for 10 seconds
+			panic(err)
 		}
 		access_token := authenticator.GetAccessToken()
 		// Append access token to access_tokens.txt

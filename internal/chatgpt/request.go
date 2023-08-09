@@ -7,10 +7,10 @@ import (
 	"freechatgpt/typings"
 	chatgpt_types "freechatgpt/typings/chatgpt"
 	"io"
-	"math/rand"
 	"os"
 	"strings"
 
+	arkose "github.com/acheong08/funcaptcha"
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
 	"github.com/gin-gonic/gin"
@@ -22,57 +22,27 @@ import (
 	official_types "freechatgpt/typings/official"
 )
 
-var proxies []string
-
 var (
 	jar     = tls_client.NewCookieJar()
 	options = []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(360),
-		tls_client.WithClientProfile(tls_client.Safari_Ipad_15_6),
+		tls_client.WithClientProfile(tls_client.Okhttp4Android13),
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 		// Disable SSL verification
 		tls_client.WithInsecureSkipVerify(),
 	}
 	client, _         = tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
-	http_proxy        = os.Getenv("http_proxy")
 	API_REVERSE_PROXY = os.Getenv("API_REVERSE_PROXY")
 )
 
 func init() {
-	// Check for proxies.txt
-	if _, err := os.Stat("proxies.txt"); err == nil {
-		// Each line is a proxy, put in proxies array
-		file, _ := os.Open("proxies.txt")
-		defer file.Close()
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			// Split line by :
-			proxy := scanner.Text()
-			proxy_parts := strings.Split(proxy, ":")
-			if len(proxy_parts) == 2 {
-				proxy = "socks5://" + proxy
-			} else if len(proxy_parts) == 4 {
-				proxy = "socks5://" + proxy_parts[2] + ":" + proxy_parts[3] + "@" + proxy_parts[0] + ":" + proxy_parts[1]
-			} else {
-				continue
-			}
-			proxies = append(proxies, proxy)
-		}
-	}
+	arkose.SetTLSClient(&client)
 }
 
-func random_int(min int, max int) int {
-	return min + rand.Intn(max-min)
-}
-
-func POSTconversation(message chatgpt_types.ChatGPTRequest, access_token string) (*http.Response, error) {
-	if http_proxy != "" && len(proxies) == 0 {
-		client.SetProxy(http_proxy)
-	}
-	// Take random proxy from proxies.txt
-	if len(proxies) > 0 {
-		client.SetProxy(proxies[random_int(0, len(proxies))])
+func POSTconversation(message chatgpt_types.ChatGPTRequest, access_token string, puid string, proxy string) (*http.Response, error) {
+	if proxy != "" {
+		client.SetProxy(proxy)
 	}
 
 	apiUrl := "https://chat.openai.com/backend-api/conversation"
@@ -91,8 +61,8 @@ func POSTconversation(message chatgpt_types.ChatGPTRequest, access_token string)
 		return &http.Response{}, err
 	}
 	// Clear cookies
-	if os.Getenv("PUID") != "" {
-		request.Header.Set("Cookie", "_puid="+os.Getenv("PUID")+";")
+	if puid != "" {
+		request.Header.Set("Cookie", "_puid="+puid+";")
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
